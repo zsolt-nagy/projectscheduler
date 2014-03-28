@@ -1,4 +1,6 @@
 projectscheduler
 ================
 
-Project Scheduler
+Backbone+Marionette Project Scheduler using the PERT method.
+
+v0.1
