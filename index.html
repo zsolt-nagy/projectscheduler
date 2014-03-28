@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>PERT</title>
+        <link href="./css/bootstrap.css" rel="stylesheet">
+        <link href="./css/app.css" rel="stylesheet">
+        <link href="./css/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="navbar navbar-inverse n222avbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <span class="brand">PERT</span>
+                </div>
+            </div>
+        </div>
+        <div id="main-region" class="container">
+            <p>Please enable Javascript to use this application.</p>
+        </div>
+        <div id="dialog-region"></div>
+        <script src="./js/vendor/jquery.js"></script>
+        <script src="./js/vendor/jquery-ui-1.10.3.js"></script>
+        <script src="./js/vendor/json2.js"></script>
+        <script src="./js/vendor/underscore.js"></script>
+        <script src="./js/vendor/backbone.js"></script>
+        <script src="./js/vendor/backbone.syphon.js"></script>
+        <script src="./js/vendor/backbone.localstorage.js"></script>
+        <script src="./js/vendor/backbone.marionette.js"></script>
+
+        <!-- ********** SHOW ********** -->
+        <script type="text/template" id="project-list-layout">
+            <div id="panel-region"></div>
+            <div id="projects-region"></div>
+        </script>
+        <script type="text/template" id="project-list-panel">
+            <button class="btn btn-primary js-new">
+                New Project
+            </button>
+        </script>
+        <script type="text/template" id="project-list">
+            <thead>
+                <tr>
+                    <th>Project Name</th>
+                    <th>Activity Count</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </script>        
+        <script type="text/template" id="project-list-item">
+            <td><%= projectName %></td>
+            <td><%= activities ? activities.length : "0" %></td>
+            <td>
+                <a href="#projects/<%= id %>" class="btn  btn-small  js-show">
+                    <i class="icon-eye-open"></i>
+                    Show 
+                </a>
+                <a href="#projects/<%= id %>/edit" class="btn  btn-small  js-edit">
+                    <i class="icon-pencil"></i>
+                    Edit
+                </a>
+                <button class="btn  btn-small  js-delete">
+                    <i class="icon-remove"></i>
+                    Delete
+                </button>
+            </td>
+        </script>   
+
+
+        <!-- ********** EDIT ********** -->
+        <script type="text/template" id="project-layout">
+            <div id="project-region"></div>
+            <div id="activity-list-region"></div>
+        </script>
+        <script type="text/template" id="activity-list-view">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Optimal Time</th>
+                    <th>Normal Time</th>
+                    <th>Pessimist Time</th>
+                    <th>Average Time</th>
+                    <th>Dependencies</th>
+                </tr>
+            </thead>
+            <tbody class="js-activity-list">
+            </tbody>
+        </script>
+        <script type="text/template" id="activity-item-view">
+            <td><%= id %></td>
+            <td><%= activityName %></td>
+            <td><%= optimalTime %></td>
+            <td><%= normalTime %></td>
+            <td><%= pessimistTime %></td>
+            <td><%= averageTime %></td>
+            <td><%= predecessorList %></td>
+        </script>   
+        <script type="text/template" id="edit-activity-list-view">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Optimal Time</th>
+                    <th>Normal Time</th>
+                    <th>Pessimist Time</th>
+                    <th>Average Time</th>
+                    <th>Dependencies</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody class="js-activity-list">
+            </tbody>
+        </script>         
+        <script type="text/template" id="edit-activity-item-view">
+            <td><%= id %></td>
+            <td>
+                <input name="activityName" type="text"
+                       value="<%= activityName %>" 
+                       class="input-small  js-input" />
+            </td>
+            <td>
+                <input name="optimalTime" type="text"
+                       value="<%= optimalTime %>" 
+                       class="input-small  js-input" />
+            </td>
+            <td>
+                <input name="normalTime" type="text"
+                       value="<%= normalTime %>" 
+                       class="input-small  js-input" />
+            </td>
+            <td>
+                <input name="pessimistTime" type="text"
+                       value="<%= pessimistTime %>" 
+                       class="input-small  js-input" />
+            </td>
+            <td><%= averageTime %></td>
+            <td>
+                <%= predecessorList %>               
+            </td>          
+            <td>
+                <button class="btn  btn-small  js-delete">
+                    <i class="icon-remove"></i>
+                    Delete
+                </button>
+            </td>
+        </script>                
+        <script type="text/template" id="project-view">
+            <h1><%= projectName %></h1>
+            <a href="#projects/<%= id %>/edit" class="btn  btn-small  js-edit">
+                <i class="icon-pencil"></i>
+                Edit Project
+            </a>
+            <p>
+                <a href="#projects" class="js-list-projects">
+                    Display Projects
+                </a>
+            </p>
+        </script>
+
+        <script type="text/template" id="missing-project-view">
+            <div class="alert  alert-error">
+                The project you are looking for does not exist.
+            </div>
+        </script>
+
+        <script type="text/template" id="loading-view">
+            <h1><%= title %></h1>
+            <p><%= message %></p>
+            <div id="spinner"></div>
+        </script>
+
+        <!-- ********** LIST ********** -->        
+        <script type="text/template" id="project-form">
+            <form>
+                <div class="control-group">
+                    <label for="project-projectName" class="control-label">
+                        Project Name:
+                    </label>
+                    <input id="project-projectName" name="projectName"
+                           type="text" value="<%= projectName %>" />
+                </div>
+                <div class="form-inline  row-fluid">
+                        <button class="btn  js-submit">Save</button>
+                        <% if( fullScreen ) { %>
+                        <button class="btn  js-cancel">View Project</button>
+                        <button class="btn  js-list-projects">
+                            Home
+                        </button>               
+                        <% } /* end if */ %>      
+                </div>
+                <% if( fullScreen ) { %>
+                <div class="form-inline  row-fluid">
+                    <div class="span2">
+                        <button class="btn  js-new-activity">New Activity</button>
+                    </div>
+                </div>
+                <div id="form-inline  row-fluid">
+                        Add/Remove dependency:
+                    <select class="select" name="dependency-first">
+                        <% _.each( activities, function( activity, index ) { %>
+                        <option value="<%= activity.id %>">
+                            <%= activity.id %> - <%= activity.activityName %>
+                        </option>
+                        <% } ); /* end each */ %>
+                    </select>
+                    <select name="dependency-last">
+                        <% _.each( activities, function( activity, index ) { %>
+                        <option value="<%= activity.id %>">
+                            <%= activity.id %> - <%= activity.activityName %>
+                        </option>
+                        <% } ); /* end each */ %>
+                    </select> 
+                    <button class="btn  js-toggle-dependency">
+                        Toggle
+                    </button>                   
+                </div>
+                <% } /* end if */ %>               
+            </form>
+            <% if( fullScreen ) { %>
+            <div class="row-fluid">
+                Estimated time: <%= estimatedTime %>
+            </div>  
+            <% } /* end if */ %>         
+        </script>   
+        <script src="./js/utilities/marionette/regions/dialog.js"></script>   
+        <script src="./js/app.js"></script>
+        <script src="./js/utilities/storage/localstorage.js"></script>
+        <script src="./js/entities/projects.js"></script>
+        <script src="./js/common/views.js"></script>
+        <script src="./js/apps/projects/projects_app.js"></script>
+        <script src="./js/apps/projects/common/views.js"></script>  
+        <script src="./js/apps/projects/list/list_view.js"></script>
+        <script src="./js/apps/projects/list/list_controller.js"></script>
+        <script src="./js/apps/projects/show/show_controller.js"></script>  
+        <script src="./js/apps/projects/show/show_view.js"></script>    
+        <script src="./js/apps/projects/edit/edit_controller.js"></script>  
+        <script src="./js/apps/projects/edit/edit_view.js"></script>
+        <script src="./js/apps/projects/new/new_view.js"></script>          
+        <script type="text/javascript">
+            PERT.start();
+        </script>
+    </body>
+</html>

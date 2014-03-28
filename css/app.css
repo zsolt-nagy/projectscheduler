@@ -1,0 +1,11 @@
+.row-fluid
+{
+	margin-top: 1em;
+	margin-bottom: 1em;
+	line-height: 3em;
+}
+
+.btn 
+{
+	vertical-align: top;
+}
